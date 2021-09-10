@@ -1,0 +1,27 @@
+﻿Weapon,Attack,Affinity,Element,Element Type,Sharpness,Handicraft,LV2+ Slots,Phial,Rampage Skills,Sharp Skills,Element Up
+Daora's Janah,190,0,41,ice,white,0,0,Power,Attack Boost III; Affinity Boost III,3,5
+Amber Hoarfrost,190,30,29,ice,blue,0; 0; 0; 1,1,Element,Attack Boost IV; Affinity Boost II,0,5
+Gnashing Flammenbeil,230,-20,20,fire,blue,0,1,Element,Affinity Boost II; Element Boost III; Attack Boost III,2,5
+Rath Blaze Splitter,210,0,30,fire,blue,0,0,Power,Attack Boost III; Element Boost I; Affinity Boost II,1,5
+Doom Bringer Axe,180,0,42,water,blue,0,1,Element,Attack Boost III; Element Boost II; Affinity Boost I,0,5
+Luto Ascia,230,-15,25,water,green,0; 1,0,Element,Affinity Boost II; Element Boost II; Attack Boost II,0,5
+Parting Slice,190,15,29,water,blue,0; 1,0,Power,Attack Boost III; Affinity Boost II; Element Boost II,0,5
+Abyssal Storm Axe,190,0,43,thunder,blue,0; 0; 1,0,Element,Attack Boost III; Anti-Aeriel Species,0,3
+Undying Light,220,15,22,thunder,green,0; 1,0,Element,Affinity Boost II; Element Boost II,0,5
+Despot's Cloudburst,200,0,32,thunder,blue,0; 0; 1,0,Power,Attack Boost II; Element Boost II; Affinity Boost I; Anti-Aquatic Species,0,5
+Reddnaught Dunat,180,0,37,dragon,white,0,1,Element,Attack Boost III; Valstrax Soul,0,5
+Abyssal Gale Axe,210,0,14,dragon,blue,0,0,Power,Element Boost IV; Anti-Aeriel Species,0,5
+Fall Drache,200,5,22,dragon,blue,0,1,Power,Affinity Boost III; Element Boost II; Attack Boost II,0,5
+Night's Crescent,180,40,0,n/a,white,0,1,Poison,Attack Boost III,2,0
+Grand Chaos,240,-15,0,n/a,green,0; 1; 1; 2,0,Exhaust,Affinity Boost III; Attack Boost II,0,0
+Rex Gnasher,220,-20,0,n/a,white,0,0,Exhaust,Attack Boost III; Affinity Boost II,1,0
+Conqueress,210,0,0,n/a,blue,0,0,Exhaust,Affinity Boost III; Attack Boost II,0,0
+Axe of Wisdom,200,0,0,n/a,blue,0; 1,1,Dragon; 25,Attack Boost II; Affinity Boost II,0,5
+Attack Surge Rampage Slicer S,225,-30,20,any,blue,0,0,Power,Attack Boost IV; Elemental Boost II; Affinity Boost IV; Sharpness Type I; Sharpness Type III; Sharpness Type IV,0,5
+Elemental Surge Rampage Slicer S,190,0,30,any,blue,0,0,Power,Attack Boost IV; Elemental Boost II; Affinity Boost IV; Sharpness Type I; Sharpness Type III; Sharpness Type IV,0,5
+Affinity Surge Rampage Slicer S,195,20,20,any,blue,0,0,Power,Attack Boost IV; Elemental Boost II; Affinity Boost IV; Sharpness Type I; Sharpness Type III; Sharpness Type IV,0,5
+Phial: Element Rampage Slicer S,205,0,20,any,blue,0,0,Element,Attack Boost IV; Elemental Boost II; Affinity Boost IV; Sharpness Type I; Sharpness Type III; Sharpness Type IV,0,5
+Phial: Dragon III Rampage Slicer S,220,0,0,n/a,blue,0,0,Dragon; 30,Attack Boost IV; Elemental Boost II; Affinity Boost IV; Sharpness Type I; Sharpness Type III; Sharpness Type IV,0,0
+Attack Surge Rampage Slicer S,240,-30,0,n/a,blue,0,0,Power,Attack Boost IV; Elemental Boost II; Affinity Boost IV; Sharpness Type I; Sharpness Type III; Sharpness Type IV,0,0
+Affinity Surge Rampage Slicer S,210,20,0,n/a,blue,0,0,Power,Attack Boost IV; Elemental Boost II; Affinity Boost IV; Sharpness Type I; Sharpness Type III; Sharpness Type IV,0,0
+Exhaust Phial Rampage Slicer S,220,0,0,n/a,blue,0,0,Exhaust,Attack Boost IV; Elemental Boost II; Affinity Boost IV; Sharpness Type I; Sharpness Type III; Sharpness Type IV,0,0
