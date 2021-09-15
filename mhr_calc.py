@@ -1,91 +1,17 @@
+import sys
 import os
-from itertools import product
+from itertools import combinations_with_replacement
+from copy import deepcopy
 from math import floor
+from typing import List
 
-class Weapon:
-    def __init__(self):
-        self.atk = 0
-        self.aff = 0
-        self.ele = 0
-        self.powerPhial = 1
-        self.elementPhial = 1
-        self.dragonPhial = 0
-        self.numSkills = 0
-        self.sharpBreak = [0]
-        self.atkMulti = 1
-        self.eleMulti = 1
-        self.sharpSkills = 0
-        self.sharp = 'green'
-        self.eleAtk = 0
-
-        self.rampNums = {
-            'i': 4,
-            'ii': 6,
-            'iii': 8,
-            'iv': 10
-        }
-    
-    def applyRampUp(self, ramp):
-        ramp = ramp.lower().strip()
-        if 'attack boost' in ramp:
-            num = ramp.split()[-1]
-            self.atk += self.rampNums[num]
-        elif 'element boost' in ramp:
-            num = ramp.split()[-1]
-            self.ele += self.rampNums[num]
-        elif 'affinity boost' in ramp:
-            num = ramp.split()[-1]
-            self.aff += self.rampNums[num] / 100
-        elif ramp == 'elemental boost ii':
-            self.ele += 7
-        elif ramp == 'sharpness type i':
-            self.sharpBreak = [0, 1]
-        elif ramp == 'sharpness type iii':
-            self.sharpBreak = [0]
-            self.sharpSkills = 0
-            self.atk -= 10
-        elif ramp == 'sharpness type iv':
-            self.sharp = 'white'
-            self.sharpSkills = 1
-            self.sharpBreak = [0]
-            self.atk -= 20
-        elif ramp == 'anti-aeriel species':
-            self.atkMulti *= 1.05
-        elif ramp == 'anti-aquatic species':
-            self.atkMulti *= 1.1
-        elif ramp == 'valstrax soul':
-            self.eleMulti *= 1.2
-
-class Atk:
-    def __init__(self, mv, type, isMorph=False, name=''):
-        self.name = name
-        self.mv = mv
-        self.type = type.lower()
-        self.isMorph = isMorph
-    
-    def __str__(self):
-        return str(self.mv)
-
-class Skill:
-    def __init__(self, name, levels):
-        self.name = name
-        self.levels = levels
-        self.skillLevels = range(levels+1)
-        self.atkUp = [0] * (levels+1)
-        self.atkPct = [1] * (levels+1)
-        self.aff = [0] * (levels+1)
+sys.path.append('.')
+from skill import Skill
+from weapon import Weapon
+from armor import Armor
 
 class Calculator:
     def __init__(self):
-        self.sharpOrder = {
-            'red': 0,
-            'orange': 1,
-            'yellow': 2,
-            'green': 3,
-            'blue': 4,
-            'white': 5
-        }
-
         self.sharpChart = {
             0: (0.5, 0.25),
             1: (0.75, 0.5),
@@ -94,56 +20,23 @@ class Calculator:
             4: (1.2, 1.0625),
             5: (1.32, 1.15),
         }
+        self.skills = Skill.genSkills()
+    
+    def __getAdd(self, skillName):
+        return self.skills[skillName].getAdd(self.currBuild.get(skillName, 0))
+    def __getPct(self, skillName):
+        return self.skills[skillName].getMul(self.currBuild.get(skillName, 0))
+    def __getMisc(self, skillName):
+        return self.skills[skillName].getMisc(self.currBuild.get(skillName, 0))
 
-    def calcDmg(self, wep, skills, buffs, motionValue, hzv):
-        atkUp = sum(buffs)
-        atkPct = 1
-        critAtkDmg = 1.25
-
-        eleUp = [0, 2, 3, 4, 4, 4]
-        elePct = [1, 1, 1, 1.05, 1.1, 1.2]
-        wepEle = max(wep.dragonPhial, wep.ele)
-        critEleDmg = 1
-
-        aff = wep.aff
-        sharpIdx = self.sharpOrder[wep.sharp]
-
-        for skill, level in skills.values():
-            atkUp += skill.atkUp[level]
-            atkPct *= skill.atkPct[level]
-            aff += skill.aff[level]
-
-        handi = skills.get('Handicraft')
-        if handi != None:  sharpIdx += handi[0].misc[handi[1]]
-        critBoost = skills.get('Critical Boost')
-        if critBoost != None: critAtkDmg = critBoost[0].misc[critBoost[1]]
-        critEle = skills.get('Critical Element')
-        if critEle != None: critEleDmg = critEle[0].misc[critEle[1]]
-        if aff >= 1: aff = 1
-
-        # For Bludgeoner
-        if sharpIdx == 3:
-            bludArr = [1, 1, 1, 1.1]
-            blud = skills.get('Bludgeoner')
-            if blud[0] != None: atkPct *= bludArr[blud[1]]
-        elif sharpIdx < 3:
-            bludArr = [1, 1.05, 1.1, 1.1]
-            blud = skills.get('Bludgeoner')
-            if blud[0] != None: atkPct *= bludArr[blud[1]]
-
-        atkSharp = self.sharpChart[sharpIdx][0]
-        eleSharp = self.sharpChart[sharpIdx][1]
-
-        atkDmg = floor(wep.atk*(atkPct)+atkUp+0.1)
-        eleDmg = floor(wepEle*(elePct[wep.eleAtk])+eleUp[wep.eleAtk]+0.1)
-
+    def getComboDmg(self, atkDmg, atkSharp, critAtkDmg, eleDmg, eleSharp, critEleDmg, aff, hz, combo, wep):
         dmg = 0
-        for atk in motionValue:
-            atkHit = atkDmg * atkSharp * hzv[0] * atk.mv * wep.atkMulti
-            eleHit = eleDmg * eleSharp * hzv[1] * wep.eleMulti
+        for atk in combo.attacks:
+            atkHit = atkDmg * atkSharp * hz[0] * atk.mv * wep.atkMulti
+            eleHit = eleDmg * eleSharp * hz[1] * wep.eleMulti
             
-            rm = skills.get('Rapid Morph')
-            if atk.isMorph and rm != None: atkHit *= rm[0].misc[rm[1]]
+            rm = self.__getPct('rapid morph')
+            if atk.isMorph: atkHit *= rm
             if atk.type != 'axe':
                 atkHit *= wep.powerPhial
                 eleHit *= wep.elementPhial
@@ -161,11 +54,91 @@ class Calculator:
             eleHit = round(eleHit)
             
             dmg += atkHit*(1-aff) + atkCrit*aff + eleHit*(1-aff) + eleCrit*aff
+        return dmg / (combo.timeSeconds - self.__getMisc('rapid morph'))
+    
+    def calcDmg(self, wep: Weapon, build: dict, buffs: List[float], hzv: List[List[float]]):
+        atkUp = sum(buffs)
+        atkPct = 1
+        eleUp = 0
+        elePct = 1
+        critAtkDmg = 1.25
+
+        wepEle = max(wep.dragonPhial, wep.ele)
+        critEleDmg = 1
+
+        aff = wep.aff
+        sharpIdx = wep.sharp
+
+        self.currBuild = build
+
+        # Attack Boost
+        atkUp += self.__getAdd('attack boost')
+        atkPct *= self.__getPct('attack boost')
+        # Element Attack
+        eleUp += self.__getAdd('element attack')
+        elePct *= self.__getPct('element attack')
+        # Critical Eye
+        aff += self.__getAdd('critical eye')
+        # Critical Boost
+        critAtkDmg += self.__getAdd('critical boost')
+        # Critical Element
+        # critEleDmg += self.__getAdd('critical element')
+        # Bludgeoner
+        '''if sharpIdx == 3:
+            bludArr = [1, 1, 1, 1.1]
+            atkPct *= bludArr[build.get('bludgeoner', 0)]
+        elif sharpIdx < 3:
+            bludArr = [1, 1.05, 1.1, 1.1]
+            atkPct *= bludArr[build.get('bludgeoner', 0)]'''
+
+        atkSharp = self.sharpChart[sharpIdx][0]
+        eleSharp = self.sharpChart[sharpIdx][1]
+
+        atkDmg = floor(wep.atk*(atkPct)+atkUp+0.1)
+        eleDmg = floor(wepEle*(elePct)+eleUp+0.1)
+
+        ampLegDps = self.getComboDmg(atkDmg, atkSharp, critAtkDmg, eleDmg, eleSharp, critEleDmg, aff, hzv[1], wep.ampCombo, wep)
+        unampLegDps = self.getComboDmg(atkDmg, atkSharp, critAtkDmg, eleDmg, eleSharp, critEleDmg, aff, hzv[1], wep.unampCombo, wep)
+
+        # Weakness Exploit
+        aff += self.__getAdd('weakness exploit')
+        ampHeadDps = self.getComboDmg(atkDmg, atkSharp, critAtkDmg, eleDmg, eleSharp, critEleDmg, aff, hzv[0], wep.ampCombo, wep)
+        unampHeadDps = self.getComboDmg(atkDmg, atkSharp, critAtkDmg, eleDmg, eleSharp, critEleDmg, aff, hzv[0], wep.unampCombo, wep)
+
+        ampDps = ampLegDps*hzv[1][2] + ampHeadDps*hzv[0][2]
+        unampDps = unampLegDps*hzv[1][2] + unampHeadDps*hzv[0][2]
+
+        efr = atkDmg*(1+(critAtkDmg-1)*aff)*atkSharp
+        efe = eleDmg*(1+(critEleDmg-1)*aff)*eleSharp
+
+        ampPct = (45+self.__getAdd('power prolonger'))/(45+self.__getAdd('power prolonger')+wep.getChargeTime())
+        unampPct = 1-ampPct
+        dps = ampDps * ampPct + unampDps * unampPct
         
-        return dmg
+        return (efr, efe, ampPct, ampLegDps,unampLegDps,ampHeadDps,unampHeadDps,dps,
+                atkDmg,critAtkDmg,atkSharp,eleDmg,critEleDmg,eleSharp,aff)
+
+def addSkills(build, armor):
+    for skill, lv in armor.skills.items():
+        if build.get(skill) == None:
+            build[skill] = 0
+        build[skill] += lv
+    return
+
+def removeSkills(build, armor):
+    for skill, lv in armor.skills.items():
+        build[skill] -= lv
+    return
+
+def verifyBuild(build, skills):
+    for skill, lv in build.items():
+        if skills.get(skill) != None:
+            if lv > skills.get(skill).levels:
+                return False
+    return True
 
 def main():
-    hzv = [0.6, 0.2]
+    hzv = [[0.6, 0.2, 0.5], [0.4, 0.15, 0.5]]
     powercharm = 6
     powertalon = 9
     dangoBooster = 9
@@ -175,174 +148,150 @@ def main():
     megaDemondrug = 7
     buffs = [powercharm, powertalon, demondrug]
 
-    ampExp = Atk(0.1, 'amp')
-    doubleSlash1 = Atk(0.28, 'sword')
-    doubleSlash2 = Atk(0.36, 'sword')
-    morphAxe1 = Atk(0.3, 'axe', isMorph=True)
-    morphAxe2 = Atk(0.6, 'axe', isMorph=True)
-    morphSword = Atk(0.23, 'sword', isMorph=True)
-
-    unampMotionValue = [doubleSlash1, doubleSlash2, morphAxe1, morphAxe2, morphSword]
-    ampMotionValue = unampMotionValue + [ampExp] * 5 
-    motionValue = ampMotionValue
-
-    atkBoost = Skill('Attack Boost', 7)
-    atkBoost.atkUp = [0, 3, 6, 9, 7, 8, 9, 10]
-    atkBoost.atkPct = [1, 1, 1, 1, 1.05, 1.06, 1.08, 1.1]
-
-    critEye = Skill('Critical Eye', 7)
-    critEye.aff = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4]
-
-    wex = Skill('Weakness Exploit', 3)
-    wex.aff = [0, 0.15, 0.3, 0.5]
-
-    critBoost = Skill('Critical Boost', 3)
-    critBoost.misc = [1, 1.3, 1.35, 1.4]
-
-    critEle = Skill('Critical Element', 3)
-    critEle.misc = [1, 1.05, 1.1, 1.15]
-
-    rapidMorph = Skill('Rapid Morph', 3)
-    rapidMorph.misc = [1, 1, 1.1, 1.2]
-
-    blud = Skill('Bludgeoner', 3)
-
-    handi = Skill('Handicraft', 5)
+    srpToStr = ['red','orange','yellow','green','blue','white']
 
     calc = Calculator()
 
-    while True:
-        mode = input('Bulk (b) or Calc (c)? ')
-
-        if mode == 'b':
-
-            # Read file
-            with open('weapons.csv', 'r') as f:
-                contents = f.read()
-            contents = contents.split('\n')
-            contents.pop()
-
-            for line in contents[1:]:
-                line = line.split(',')
-                for ramp in line[9].split(';'):
-                    wep = Weapon()
-                    wep.numSkills = 17
-
-                    wep.name = line[0]
-                    wep.atk = int(line[1])
-                    wep.aff = float(line[2]) / 100
-                    wep.ele = int(line[3])
-                    wep.eleType = line[4]
-                    wep.sharp = line[5]
-                    wep.sharpBreak = [int(num) for num in line[6].split(';')]
-                    wep.numSkills += int(line[7])
-                    wep.sharpSkills = int(line[10])
-                    wep.eleAtk = int(line[11])
-
-                    wep.phial = line[8].lower()
-                    if wep.phial == 'power':
-                        wep.powerPhial = 1.15
-                        wep.numSkills -= 1
-                    elif wep.phial == 'element':
-                        wep.elementPhial = 1.45
-                    elif 'dragon' in wep.phial:
-                        wep.dragonPhial = int(line[8].split(';')[-1])
-                    wep.applyRampUp(ramp)
-
-                    if wep.sharp in ('blue', 'white'):
-                        blud.skillLevels = [0]
-                    else:
-                        blud.skillLevels = range(4)
-
-                    handi.misc = wep.sharpBreak
-                    handi.skillLevels = range(len(wep.sharpBreak))
-
-                    results = []
-                    skillList = [atkBoost, critEye, wex, critBoost, critEle, blud, rapidMorph, handi]
-                    for it in product(*(skill.skillLevels for skill in skillList)):
-                        skills = {}
-                        for n in range(len(skillList)):
-                            skills[skillList[n].name] = (skillList[n], it[n])
-
-                        dmg = calc.calcDmg(wep, skills, buffs, motionValue, hzv)
-                        if skills['Handicraft'][1] != 0: wep.sharpSkills = 3
-                        numSkills = wep.numSkills - wep.sharpSkills
-                        if (sum(it) < numSkills and skills['Attack Boost'][1]>=4) or \
-                        (sum(it) < numSkills and skills['Critical Eye'][1]>=3) or \
-                        (sum(it) < numSkills and skills['Attack Boost'][1]>=2 and skills['Critical Eye'][1]>=1) or\
-                        (sum(it) == numSkills and skills['Attack Boost'][1]>=2 and skills['Critical Eye'][1]>= 3) or \
-                        (sum(it) == numSkills and skills['Attack Boost'][1]>=4 and skills['Critical Eye'][1]>=2) or \
-                        (sum(it) == numSkills and skills['Critical Eye'][1]>=6 and skills['Critical Boost'][1]>=1) or \
-                        (sum(it) == numSkills+1 and (skills['Critical Eye'][1]>=6 and skills['Attack Boost'][1]>=2) and skills['Critical Boost'][1]>=1) or \
-                        (sum(it) == numSkills+1 and (skills['Critical Eye'][1]>=5 and skills['Attack Boost'][1]>=4) and skills['Critical Boost'][1]>=1) or \
-                        (sum(it) == numSkills+1 and (skills['Critical Eye'][1]>=2 and skills['Attack Boost'][1]>=2 and skills['Bludgeoner'][1]>=3)):
-                            results.append((it, dmg))
-
-                    results.sort(key=lambda x:x[1])
-
-                    if not os.path.exists('tmp.csv'):
-                        with open('tmp.csv', 'w') as f:
-                            skillStr = ''
-                            for skill in skillList:
-                                skillStr += f',{skill.name}'
-                            f.write(f'Combo Dmg,Weapon,Rampage Skill,Num Skills{skillStr},Element Attack,Wep Atk,Wep Aff,Wep Ele,Ele Type,Wep Srp,Phial\n')
-
-                    with open('tmp.csv', 'a') as f:
-                        numStr = ''
-                        result = results[-1]
-                        for num in result[0]:
-                            numStr += f',{num}'
-                        f.write(f'{result[-1]},{wep.name},{ramp},{sum(result[0])}{numStr},{wep.eleAtk},{wep.atk},{wep.aff},{wep.ele},{wep.eleType},{wep.sharp},{wep.phial}\n')
-
-                    print(results[-1])
-            break
-        elif mode == 'c':
-            wep = Weapon()
-            wep.numSkills = 13
-
-            wep.name = 'Abyssal Storm Axe'
-            wep.atk = 190
-            wep.aff = 0 / 100
-            wep.ele = 43
-            wep.eleType = ''
-            wep.sharp = 'blue'
-            wep.sharpBreak = [0, 0, 1]
-            wep.eleAtk = 5
-
-            wep.phial = 'element'
-            if wep.phial == 'power':
-                wep.powerPhial = 1.15
-            elif wep.phial == 'element':
-                wep.elementPhial = 1.45
-            elif 'dragon' in wep.phial:
-                wep.dragonPhial = int(line[8].split(';')[-1])
-            wep.applyRampUp('Attack Boost III')
-
-            if wep.sharp in ('blue', 'white'):
-                blud.skillLevels = [0]
-            else:
-                blud.skillLevels = range(4)
-
-            handi.misc = wep.sharpBreak
-            handi.skillLevels = range(len(wep.sharpBreak))
-
-            results = []
-            skillList = [atkBoost, critEye, wex, critBoost, critEle, blud, rapidMorph, handi]
-            for it in product(*(skill.skillLevels for skill in skillList)):
-                skills = {}
-                for n in range(len(skillList)):
-                    skills[skillList[n].name] = (skillList[n], it[n])
-
-                dmg = calc.calcDmg(wep, skills, buffs, motionValue, hzv)
-                if sum(it) == wep.numSkills:
-                    results.append((it, dmg))
-
-            results.sort(key=lambda x:x[1])
-            for result in results:
-                print(result)
-            print('AB,CE,WEX,CB,CEle,Blud,RM,Handi')
-            break
-            
+    weapons = Weapon.loadWeapons('weapons.csv')
+    armor = Armor.loadArmor('armor.csv')
+    with open ('out.csv', 'w') as f:
+        f.write(
+            'weapon,attack,affinity,element,element type,sharpness,phial,ramp,'+\
+            'helm,chest,gloves,waist,legs,charm,decos,element attack,'+\
+            'efr,efe,amped %,amped leg dps,unamped leg dps,amped head dps,unamped head dps,dps\n'
+        )
+    for wep in weapons:
+        bestDmg = 0
+        bestBuild = []
+        for ramp in wep.ramps:
+            wep.applyRampUp(ramp)
+            build = {}
+            for helm in armor['helm']:
+                addSkills(build, helm)
+                for chest in armor['chest']:
+                    addSkills(build, chest)
+                    for gloves in armor['gloves']:
+                        addSkills(build, gloves)
+                        # verify build hasn't maxed out a key skill
+                        if verifyBuild(build, calc.skills) == False:
+                            removeSkills(build, gloves)
+                            continue
+                        for waist in armor['waist']:
+                            addSkills(build, waist)
+                            # verify build hasn't maxed out a key skill
+                            if verifyBuild(build, calc.skills) == False:
+                                removeSkills(build, waist)
+                                continue
+                            for legs in armor['legs']:
+                                addSkills(build, legs)
+                                # verify build hasn't maxed out a key skill
+                                if verifyBuild(build, calc.skills) == False:
+                                    removeSkills(build, legs)
+                                    continue
+                                for charm in armor['charm']:
+                                    addSkills(build, charm)
+                                    # verify build hasn't maxed out a key skill
+                                    if verifyBuild(build, calc.skills) == False:
+                                        removeSkills(build, charm)
+                                        continue
+                                    # Handicraft
+                                    for i in range(len(wep.sharpBreak)):
+                                        # l1 stuff
+                                        l1 = helm.l1+chest.l1+gloves.l1+waist.l1+legs.l1+charm.l1+wep.l1
+                                        if wep.eleType != 'n/a':
+                                            build['element attack'] = min(l1, 5)
+                                        # l2 stuff
+                                        l2 = helm.l2+chest.l2+gloves.l2+waist.l2+legs.l2+charm.l2+wep.l2+\
+                                            helm.l3+chest.l3+gloves.l3+waist.l3+legs.l3+charm.l3+wep.l3
+                                        l3 = helm.l3+chest.l3+gloves.l3+waist.l3+legs.l3+charm.l3+wep.l3
+                                        if build.get('evade extender', 0) == 0: 
+                                            l2 -= 1
+                                        # Sharpness
+                                        handiReq = wep.sharpBreak[i] - build['handicraft']
+                                        sharpSkills = wep.sharpSkills if i == 0 else 3
+                                        sharpSkills = sharpSkills+handiReq-build.get('protective polish', 0)
+                                        l2 -= sharpSkills
+                                        # End early if invalid
+                                        if sharpSkills < 0 or l2 < 0 or handiReq > l3: 
+                                            break
+                                        wep.sharp += i
+                                        # Remove already maxed skills to save some time
+                                        decoSkills = list(calc.skills.keys())
+                                        for skill in calc.skills.keys():
+                                            if build.get(skill, 0) >= calc.skills[skill].levels:
+                                                decoSkills.remove(skill)
+                                        for decos in combinations_with_replacement(decoSkills, l2):
+                                            # Add decos to build
+                                            for skill in decos:
+                                                if build.get(skill) == None:
+                                                    build[skill] = 0
+                                                build[skill] += 1
+                                            # Check if decos went over the skill size
+                                            if verifyBuild(build, calc.skills) == False:
+                                                for skill in decos:
+                                                    build[skill] -= 1
+                                                continue
+                                            dmg = calc.calcDmg(wep, build, buffs, hzv)
+                                            dps = dmg[7]
+                                            if(dps > bestDmg):
+                                                bestDmg = dps
+                                                bestBuild = [{
+                                                    'weapon': deepcopy(wep),
+                                                    'ramp': ramp,
+                                                    'helm': str(helm), 
+                                                    'chest': str(chest), 
+                                                    'gloves': str(gloves), 
+                                                    'waist': str(waist), 
+                                                    'legs': str(legs),
+                                                    'charm': str(charm),
+                                                    'decos': decos,
+                                                    'eleAtk': build['element attack'],
+                                                    'dmg': dmg,
+                                                }]
+                                            elif(dps == bestDmg):
+                                                bestBuild.append({
+                                                    'weapon': deepcopy(wep),
+                                                    'ramp': ramp,
+                                                    'helm': str(helm), 
+                                                    'chest': str(chest), 
+                                                    'gloves': str(gloves), 
+                                                    'waist': str(waist), 
+                                                    'legs': str(legs),
+                                                    'charm': str(charm),
+                                                    'decos': decos,
+                                                    'eleAtk': build['element attack'],
+                                                    'dmg': dmg,
+                                                })
+                                            # Undo decos
+                                            for skill in decos:
+                                                build[skill] -= 1
+                                        # Undo Sharp
+                                        wep.sharp -= i
+                                    # Undo Charm
+                                    removeSkills(build, charm)
+                                # Undo Legs
+                                removeSkills(build, legs)
+                            # Undo Waist
+                            removeSkills(build, waist)
+                        # Undo Gloves
+                        removeSkills(build, gloves)
+                    # Undo Chest
+                    removeSkills(build, chest)
+                # Undo Helm
+                removeSkills(build, helm)
+            # Undo Ramp
+            wep.removeRampUp(ramp)
+        with open('out.csv', 'a') as f:
+            for build in bestBuild:
+                print(f'writing for {build["weapon"]}')
+                f.write(
+                    f"{build['weapon'].name},{build['weapon'].atk},{build['weapon'].aff},{build['weapon'].ele},"+\
+                    f"{build['weapon'].eleType},{srpToStr[build['weapon'].sharp]},{build['weapon'].phial},"+\
+                    f"{build['ramp']},{build['helm']},{build['chest']},{build['gloves']},{build['waist']},"+\
+                    f"{build['legs']},{build['charm']},\"{build['decos']}\",{build['eleAtk']},"+\
+                    f"{build['dmg'][0]},{build['dmg'][1]},{build['dmg'][2]},{build['dmg'][3]},{build['dmg'][4]},"+\
+                    f"{build['dmg'][5]},{build['dmg'][6]},{build['dmg'][7]}\n"
+                )
 
 if __name__ == '__main__':
     exit(main())
