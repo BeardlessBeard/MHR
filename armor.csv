@@ -2,18 +2,20 @@ Armor,Type,Skills,Lv 3 Slots,Lv 2 Slots,Lv 1 Slots
 Kaiser Crown,Helm,Critical Eye-3; Critical Boost-1,0,0,1
 Almuldron Crown S,Helm,Rapid Morph-2,0,2,0
 Vaik Mail S,Chest,,1,1,1
+Nargacuga Mail S,Chest,Critical Eye-2; Evade Window-1,0,0,2
 Jyuratodos Mail,Chest,Power Prolonger-2; Evade Extender-1,0,0,3
-Nargacuga Mail S,Chest,Critical Eye-2; Constitution-1,0,0,2
 Sinister Gauntlets S,Gloves,Handicraft-2; Hellfire Cloak-1,0,1,0
 Rathalos Braces S,Gloves,Attack Boost-2,0,1,0
-Kaiser Vambraces,Gloves,Critical Eye-1; Critical Boost-1,0,1,0
-Lagombi Vambraces S,Gloves,Critical Eye-2,0,1,1
-Nargacuga Coil S,Waist,Critical Eye-1; Evade Extender-2,0,1,0
+Kaiser Vambraces,Gloves,Critical Eye-1; Critical Boost-1;Teostra Blessing-1,0,1,0
+Valstrax Braces,Gloves,Weakness Exploit-2;Dragonheart-1,0,1,0
+Lagombi Vambraces S,Gloves,Critical Eye-2;Ice Attack-1,0,1,1
 Anjanath Coil S,Waist,Attack Boost-2,0,1,2
-Chrome Metal Coil,Waist,,1,1,1
-Kadachi Greaves S,Legs,Critical Eye-2; Constitution-1,0,1,1
+Nargacuga Coil S,Waist,Evade Extender-2; Critical Eye-1,0,1,0
+Ingot Coil S,Waist,Power Prolonger-2,0,1,0
 Ingot Greaves S,Legs,Attack Boost-2; Critical Eye-2,0,0,1
 Hunter's Greaves S,Legs,Attack Boost-2; Stun Resistance-1,0,1,0
-Arzuros Legs S,Legs,,1,1,1
-Volvidon Greaves S,Legs,Rapid Morph-1; Evade Extender-2,0,0,2
+Golden Hakama,Legs,Critical Boost-2;Latent Power-1,0,0,2
+Kadachi Greaves S,Legs,Critical Eye-2;Constitution-1,0,1,0
+Ludroth Greaves S,Legs,Power Prolonger-2,1,0,0
+Rapid Morph 2 Charm,Charm,Rapid Morph-2,0,2,0
 Rapid Morph 1 Charm,Charm,Rapid Morph-1,0,2,0

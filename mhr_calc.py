@@ -77,8 +77,13 @@ class Calculator:
         # Element Attack
         eleUp += self.__getAdd('element attack')
         elePct *= self.__getPct('element attack')
+        # Teostra Patch
+        if build.get("teostra blessing", 0) > 0 and wep.eleType=='fire':
+            if build.get("teostra blessing") == 1: elePct *= 1.05
+            else: elePct *= 1.1
         # Critical Eye
         aff += self.__getAdd('critical eye')
+        aff = min(aff,1)
         # Critical Boost
         critAtkDmg += self.__getAdd('critical boost')
         # Critical Element
@@ -102,6 +107,7 @@ class Calculator:
 
         # Weakness Exploit
         aff += self.__getAdd('weakness exploit')
+        aff = min(aff,1)
         ampHeadDps = self.getComboDmg(atkDmg, atkSharp, critAtkDmg, eleDmg, eleSharp, critEleDmg, aff, hzv[0], wep.ampCombo, wep)
         unampHeadDps = self.getComboDmg(atkDmg, atkSharp, critAtkDmg, eleDmg, eleSharp, critEleDmg, aff, hzv[0], wep.unampCombo, wep)
 
@@ -115,8 +121,7 @@ class Calculator:
         unampPct = 1-ampPct
         dps = ampDps * ampPct + unampDps * unampPct
         
-        return (efr, efe, ampPct, ampLegDps,unampLegDps,ampHeadDps,unampHeadDps,dps,
-                atkDmg,critAtkDmg,atkSharp,eleDmg,critEleDmg,eleSharp,aff)
+        return (efr, efe, ampPct, unampLegDps,ampLegDps,unampHeadDps,ampHeadDps,dps)
 
 def addSkills(build, armor):
     for skill, lv in armor.skills.items():
@@ -158,7 +163,7 @@ def main():
         f.write(
             'weapon,attack,affinity,element,element type,sharpness,phial,ramp,'+\
             'helm,chest,gloves,waist,legs,charm,decos,element attack,'+\
-            'efr,efe,amped %,amped leg dps,unamped leg dps,amped head dps,unamped head dps,dps\n'
+            'efr,efe,amped %,unamped leg dps,amped leg dps,unamped head dps,amped head dps,dps\n'
         )
     for wep in weapons:
         bestDmg = 0
@@ -171,6 +176,9 @@ def main():
                 for chest in armor['chest']:
                     addSkills(build, chest)
                     for gloves in armor['gloves']:
+                        # Dragonheart no amp patch
+                        if 'valstrax' in gloves.name and wep.eleType not in ('n/a', 'dragon'):
+                            continue
                         addSkills(build, gloves)
                         # verify build hasn't maxed out a key skill
                         if verifyBuild(build, calc.skills) == False:
@@ -212,8 +220,10 @@ def main():
                                         sharpSkills = sharpSkills+handiReq-build.get('protective polish', 0)
                                         l2 -= sharpSkills
                                         # End early if invalid
-                                        if sharpSkills < 0 or l2 < 0 or handiReq > l3: 
+                                        if l2 < 0 or handiReq > l3:
                                             break
+                                        if sharpSkills < 0: 
+                                            continue
                                         wep.sharp += i
                                         # Remove already maxed skills to save some time
                                         decoSkills = list(calc.skills.keys())
@@ -245,7 +255,7 @@ def main():
                                                     'legs': str(legs),
                                                     'charm': str(charm),
                                                     'decos': decos,
-                                                    'eleAtk': build['element attack'],
+                                                    'eleAtk': build.get('element attack', 0),
                                                     'dmg': dmg,
                                                 }]
                                             elif(dps == bestDmg):
@@ -259,7 +269,7 @@ def main():
                                                     'legs': str(legs),
                                                     'charm': str(charm),
                                                     'decos': decos,
-                                                    'eleAtk': build['element attack'],
+                                                    'eleAtk': build.get('element attack', 0),
                                                     'dmg': dmg,
                                                 })
                                             # Undo decos

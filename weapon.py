@@ -134,17 +134,17 @@ class Weapon:
         for line in contents[1:]:
             line = line.split(',')
             wep = Weapon('switch axe')
-            wep.name = line[0]
+            wep.name = line[0].strip()
             wep.atk = int(line[1])
             wep.aff = float(line[2]) / 100
             wep.ele = int(line[3])
-            wep.eleType = line[4]
-            wep.sharp = wep.sharpOrder[line[5]]
+            wep.eleType = line[4].strip()
+            wep.sharp = wep.sharpOrder[line[5].strip()]
             wep.sharpBreak = [int(num) for num in line[6].split(';')]
             wep.l1 = int(line[7])
             wep.l2 = int(line[8])
             wep.l3 = int(line[9])
-            wep.phial = line[10].lower()
+            wep.phial = line[10].lower().strip()
             if wep.phial == 'power':
                 wep.powerPhial = 1.15
             elif wep.phial == 'element':
